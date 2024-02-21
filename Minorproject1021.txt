@@ -1,0 +1,65 @@
+package MinorProject1021;
+
+import org.firmata4j.*;
+import org.firmata4j.firmata.FirmataDevice;
+import org.firmata4j.ssd1306.SSD1306;
+
+
+import java.io.IOException;
+import java.util.Timer;
+
+import edu.princeton.cs.introcs.StdDraw;
+import org.firmata4j.I2CDevice;
+import org.firmata4j.IODevice;
+import org.firmata4j.Pin;
+
+
+    public class MinorProject1021 {
+
+        public static void main(String[] args)
+                throws IOException, InterruptedException {
+
+            String portConnection = "COM3";
+            IODevice arduinoBoard = new FirmataDevice(portConnection);
+
+            arduinoBoard.ensureInitializationIsDone();
+            arduinoBoard.start();
+
+            I2CDevice i2cComponent = arduinoBoard.getI2CDevice((byte) 0x3C); // Use 0x3C for the Grove OLED
+            SSD1306 oledScreen = new SSD1306(i2cComponent, SSD1306.Size.SSD1306_128_64); // 128x64 OLED SSD1515
+            // Initialize the OLED (SSD1306) object
+            oledScreen.init();
+
+            var moistureSensorPin = arduinoBoard.getPin(15);
+            moistureSensorPin.setMode(Pin.Mode.ANALOG);
+
+            var pumpControlPin = arduinoBoard.getPin(2);
+            pumpControlPin.setMode(Pin.Mode.OUTPUT);
+
+            Timer taskTimer = new Timer();
+
+
+            var buttonPin = arduinoBoard.getPin(6);
+
+            arduinoBoard.addEventListener(new ButtonAction(pumpControlPin, buttonPin));
+            buttonPin.setMode(Pin.Mode.INPUT);
+
+            var taskInstance = new SoilMoistureTask(oledScreen, pumpControlPin, moistureSensorPin, buttonPin);
+            Timer primaryTimer = new Timer();
+            primaryTimer.schedule(taskInstance, 0, 1000);
+            edu.princeton.cs.introcs.StdDraw.setXscale(0, 100);
+            edu.princeton.cs.introcs.StdDraw.setYscale(0, 1000);
+            edu.princeton.cs.introcs.StdDraw.setPenRadius(0.005);
+            edu.princeton.cs.introcs.StdDraw.setPenColor(edu.princeton.cs.introcs.StdDraw.MAGENTA);
+            edu.princeton.cs.introcs.StdDraw.line(0, 0, 0, 1023);
+            edu.princeton.cs.introcs.StdDraw.line(0, 0, 1000, 0);
+            edu.princeton.cs.introcs.StdDraw.text(50, -15, "Time (min)");
+            edu.princeton.cs.introcs.StdDraw.text(-3, 500, "Volt");
+            edu.princeton.cs.introcs.StdDraw.text(500, 1100, "Live Voltage vs. Time Graph");
+            edu.princeton.cs.introcs.StdDraw.show();
+        }
+
+
+    }
+
+

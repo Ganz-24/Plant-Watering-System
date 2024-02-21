@@ -1,0 +1,122 @@
+package MinorProject1021;
+
+import org.firmata4j.Pin;
+import org.firmata4j.ssd1306.SSD1306;
+import edu.princeton.cs.introcs.StdDraw;
+
+import java.io.IOException;
+import java.util.TimerTask;
+import java.util.HashMap;
+
+public class SoilMoistureTask extends TimerTask {
+    private final SSD1306 oled;
+    private final Pin waterControl;
+    private final Pin soilMoisture;
+    private final Pin userStop;
+    private int passedTime = 0;
+
+    SoilMoistureTask(SSD1306 display, Pin pumpPin, Pin moisturePin, Pin stopPin) {
+        this.oled = display;
+        this.soilMoisture = moisturePin;
+        this.waterControl = pumpPin;
+        this.userStop = stopPin;
+    }
+
+
+
+
+    @Override
+    public void run() {
+
+
+        System.out.println((soilMoisture.getValue()));
+
+
+        if (userStop.getValue() == 0){
+            soilMoisture.getValue();
+            System.out.println(soilMoisture.getValue());
+            oled.clear();
+
+
+            if (soilMoisture.getValue() > 690) {
+                oled.getCanvas().clear();
+                oled.getCanvas().drawString(0, 0, "The pump is on!");
+                oled.getCanvas().drawString(0, 20, "the moisture state is at "+soilMoisture.getValue());
+                oled.display();
+
+
+                try {
+                    waterControl.setValue(1);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+
+
+
+
+            } else if (soilMoisture.getValue() < 680 ) {
+                oled.getCanvas().clear();
+                oled.getCanvas().drawString(0, 0, "The pump is off!");
+                oled.getCanvas().drawString(0, 20, "the moisture state is at "+soilMoisture.getValue());
+                oled.display();
+                try {
+                    waterControl.setValue(0);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+
+
+
+
+            } else if (soilMoisture.getValue() > 680 && soilMoisture.getValue() >690) {
+
+
+                oled.getCanvas().clear();
+                oled.getCanvas().drawString(0, 0, "The pump is on!");
+                oled.getCanvas().drawString(0, 20, "the moisture state is at "+soilMoisture.getValue());
+                oled.display();
+                try {
+                    waterControl.setValue(1);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+
+
+
+
+        } if (userStop.getValue() == 1) {
+            oled.getCanvas().clear();
+            oled.getCanvas().drawString(0, 0, "The pump is off!");
+            oled.getCanvas().drawString(0, 20, "the moisture state is at "+soilMoisture.getValue());
+            oled.display();
+            try {
+                soilMoisture.setValue(0);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+
+
+            ///
+        }
+        HashMap<Integer, Integer> number = new HashMap<>();
+        soilMoisture.getValue();
+
+
+        int data = (int) soilMoisture.getValue();
+
+
+
+
+        passedTime++;
+        number.put(passedTime, data);
+        number.forEach((xValue, yValue) -> StdDraw.text(xValue, yValue, "*"));
+
+
+
+
+        System.out.println(soilMoisture.getValue());
+
+
+    }
+}
